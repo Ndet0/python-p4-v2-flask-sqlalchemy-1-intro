@@ -1,9 +1,9 @@
 # server/app.py
 
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 
-from models import db
+from models import db, Pet
 
 # create a Flask application instance
 app = Flask(__name__)
@@ -19,6 +19,21 @@ migrate = Migrate(app, db)
 
 # initialize the Flask application to use the database
 db.init_app(app)
+
+
+@app.route('/pets', methods=['POST'])
+def create_pet():
+    data = request.get_json()
+    pet = Pet(name=data['name'], species=data['species'])
+    db.session.add(pet)
+    db.session.commit()
+    return jsonify({'id': pet.id, 'name': pet.name, 'species': pet.species}), 201
+
+
+@app.route('/pets', methods=['GET'])
+def get_pets():
+    pets = Pet.query.all()
+    return jsonify([{'id': p.id, 'name': p.name, 'species': p.species} for p in pets])
 
 
 if __name__ == '__main__':
